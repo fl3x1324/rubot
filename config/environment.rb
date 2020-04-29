@@ -4,4 +4,4 @@ require_relative 'application'
 # Initialize the Rails application.
 Rails.application.initialize!
 
-config.hosts << "fbbot.ruse.church"
+Rails.application.config.hosts << "fbbot.ruse.church"
