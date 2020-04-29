@@ -23,7 +23,8 @@ class WebhookController < ApplicationController
     hub_challenge = params["hub.challenge"]
     if hub_mode == "subscribe" && hub_verify_token == ENV["FBBOT_VERIFYTOKEN"]
       render plain: hub_challenge
+    else
+      render status: :forbidden
     end
-    render status: :forbidden
   end
 end
