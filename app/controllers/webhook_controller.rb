@@ -10,6 +10,7 @@ class WebhookController < ApplicationController
       messages = event["entry"][0]["messaging"]
       messages.each do |msg|
         puts "Got new message: #{msg["message"]["text"]} from sender id: #{msg["sender"]["id"]}"
+        puts "JSON: #{request.body.read}"
       end
       render plain: "EVENT_RECEIVED"
     else
