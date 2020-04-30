@@ -12,6 +12,8 @@ class WebhookController < ApplicationController
         puts "Got new message: #{msg["message"]["text"]} from sender id: #{msg["sender"]["id"]}"
         puts "JSON: #{request.body.read}"
       end
+      hist_rec = HistoryRecord.new request_dump: request.body.read
+      puts "History record persisted? #{hist_rec.save}"
       render plain: "EVENT_RECEIVED"
     else
       render plain: "ERROR!", status: :bad_request

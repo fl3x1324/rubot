@@ -80,6 +80,4 @@ test:
 #
 production:
   <<: *default
-  database: fbbot_production
-  username: fbbot
-  password: <%= ENV['FBBOT_DATABASE_PASSWORD'] %>
+  url: <%= ENV['DATABASE_URL'] %>
