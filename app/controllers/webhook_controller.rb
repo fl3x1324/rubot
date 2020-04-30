@@ -23,13 +23,13 @@ class WebhookController < ApplicationController
             },
         }
         puts "Replying with message: #{reply.to_json}"
-        uri = URI ["SEND_API_URL"]
+        uri = URI ENV["SEND_API_URL"]
         req = Net::HTTP::Post.new uri
         req["Content-Type"] = "application/json"
         req.body = reply.to_json
-        res = Net::HTTP.start(uri.hostname, uri.port) { |http|
+        res = Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
           http.request req
-        }
+        end
         puts res.to_json
       end
       hist_rec = HistoryRecord.new request_dump: request.body.read
