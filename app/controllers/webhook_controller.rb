@@ -22,15 +22,14 @@ class WebhookController < ApplicationController
                 text: "Слава Богу!",
             },
         }
-        puts "Replying with message: #{reply.to_json}"
         uri = URI ENV["SEND_API_URL"]
         req = Net::HTTP::Post.new uri
         req["Content-Type"] = "application/json"
         req.body = reply.to_json
-        res = Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
+        Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
+          puts "Replying with message: #{reply.to_json}"
           http.request req
-        end
-        puts res.to_json
+        end if msg.dig("message", "text")
       end
       hist_rec = HistoryRecord.new request_dump: request.body.read
       puts "History record persisted? #{hist_rec.save}"
