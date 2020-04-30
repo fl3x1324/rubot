@@ -7,10 +7,10 @@ class WebhookController < ApplicationController
   def process_event
     event = @json.decode request.body.read
     if event && event["object"] && event["object"] == "page"
+      puts "JSON: #{request.body.read}"
       messages = event["entry"][0]["messaging"]
       messages.each do |msg|
         puts "Got new message: #{msg["message"]["text"]} from sender id: #{msg["sender"]["id"]}"
-        puts "JSON: #{request.body.read}"
       end
       hist_rec = HistoryRecord.new request_dump: request.body.read
       puts "History record persisted? #{hist_rec.save}"
