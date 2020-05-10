@@ -22,24 +22,9 @@ class WebhookController < ApplicationController
       messages.each do |msg|
         if msg.dig("message", "text")
           puts "Got new message: #{msg.dig("message", "text")} from sender id: #{msg.dig("sender", "id")}"
-          reply_text = build_verse_text
-          reply = {
-              messaging_type: "RESPONSE",
-              recipient: {
-                  id: msg.dig("sender", "id"),
-              },
-              message: {
-                  text: reply_text,
-              },
-          }
-          uri = URI ENV["SEND_API_URL"]
-          req = Net::HTTP::Post.new uri
-          req["Content-Type"] = "application/json"
-          req.body = reply.to_json
-          Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
-            puts "Replying with message: #{reply.to_json}"
-            http.request req
-          end
+          text_and_location = verse_text_and_location
+          send_text_message msg.dig("sender", "id"), "RESPONSE", text_and_location[:location]
+          send_text_message msg.dig("sender", "id"), "RESPONSE", text_and_location[:text]
         end
       end
       hist_rec = HistoryRecord.new request_dump: request.body.read
@@ -62,6 +47,26 @@ class WebhookController < ApplicationController
   end
 
   private
+
+  def send_text_message(recipient, type, text)
+    reply = {
+        messaging_type: type,
+        recipient: {
+            id: recipient,
+        },
+        message: {
+            text: text,
+        },
+    }
+    uri = URI ENV["SEND_API_URL"]
+    req = Net::HTTP::Post.new uri
+    req["Content-Type"] = "application/json"
+    req.body = reply.to_json
+    Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
+      puts "Replying with message: #{reply.to_json}"
+      http.request req
+    end
+  end
 
   def read_verses_from_sheet
     puts "reading from xlsx file..."
@@ -109,7 +114,7 @@ class WebhookController < ApplicationController
     end
   end
 
-  def build_verse_text
+  def verse_text_and_location
     verse = read_verses_from_sheet
     res = fetch_verse_text verse
     text = ""
@@ -123,6 +128,6 @@ class WebhookController < ApplicationController
         end
       end
     end
-    text
+    {text: text, location: verse[:p]}
   end
 end
