@@ -20,7 +20,7 @@ class WebhookController < ApplicationController
       puts "JSON: #{request.body.read}"
       messages = event["entry"][0]["messaging"]
       messages.each do |msg|
-        if msg.dig("message", "text")
+        if msg.dig("message", "text") && msg.dig("message", "text").downcase.include?("стих за деня")
           puts "Got new message: #{msg.dig("message", "text")} from sender id: #{msg.dig("sender", "id")}"
           text_and_location = verse_text_and_location
           send_text_message msg.dig("sender", "id"), "RESPONSE", text_and_location[:location]
@@ -103,7 +103,7 @@ class WebhookController < ApplicationController
       res = http.request req
       case res
       when Net::HTTPSuccess
-        puts "successfully fetched verse text form GetBible API"
+        puts "successfully fetched verse text form GetBible's API"
         res
       when Net::HTTPRedirection
         location = res["location"]
