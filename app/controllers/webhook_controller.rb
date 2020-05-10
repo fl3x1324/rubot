@@ -20,25 +20,27 @@ class WebhookController < ApplicationController
       puts "JSON: #{request.body.read}"
       messages = event["entry"][0]["messaging"]
       messages.each do |msg|
-        reply_text = build_verse_text if msg.dig("message", "text") && msg.dig("message", "text") == "Стих за деня!"
-        puts "Got new message: #{msg.dig("message", "text")} from sender id: #{msg.dig("sender", "id")}"
-        reply = {
-            messaging_type: "RESPONSE",
-            recipient: {
-                id: msg.dig("sender", "id"),
-            },
-            message: {
-                text: reply_text,
-            },
-        }
-        uri = URI ENV["SEND_API_URL"]
-        req = Net::HTTP::Post.new uri
-        req["Content-Type"] = "application/json"
-        req.body = reply.to_json
-        Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
-          puts "Replying with message: #{reply.to_json}"
-          http.request req
-        end if msg.dig("message", "text") && msg.dig("message", "text") == "Стих за деня!"
+        if msg.dig("message", "text") && msg.dig("message", "text") == "Стих за деня!"
+          reply_text = build_verse_text
+          puts "Got new message: #{msg.dig("message", "text")} from sender id: #{msg.dig("sender", "id")}"
+          reply = {
+              messaging_type: "RESPONSE",
+              recipient: {
+                  id: msg.dig("sender", "id"),
+              },
+              message: {
+                  text: reply_text,
+              },
+          }
+          uri = URI ENV["SEND_API_URL"]
+          req = Net::HTTP::Post.new uri
+          req["Content-Type"] = "application/json"
+          req.body = reply.to_json
+          Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
+            puts "Replying with message: #{reply.to_json}"
+            http.request req
+          end
+        end
       end
       hist_rec = HistoryRecord.new request_dump: request.body.read
       puts "History record persisted? #{hist_rec.save}"
