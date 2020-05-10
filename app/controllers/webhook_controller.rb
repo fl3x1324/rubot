@@ -20,7 +20,7 @@ class WebhookController < ApplicationController
       puts "JSON: #{request.body.read}"
       messages = event["entry"][0]["messaging"]
       messages.each do |msg|
-        if msg.dig("message", "text") && msg.dig("message", "text") == '\u0421\u0442\u0438\u0445 \u0437\u0430 \u0434\u0435\u043d\u044f!'
+        if msg.dig("message", "text")
           reply_text = build_verse_text
           puts "Got new message: #{msg.dig("message", "text")} from sender id: #{msg.dig("sender", "id")}"
           reply = {
