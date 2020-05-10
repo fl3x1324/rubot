@@ -1,5 +1,6 @@
 class WebhookController < ApplicationController
   require 'net/http'
+  require 'roo'
 
   def initialize
     super
@@ -7,6 +8,9 @@ class WebhookController < ApplicationController
     @books_english = {
         "Филипяни" => "Philippians",
         "Матей" => "Matthew",
+        "Псалми" => "Psalms",
+        "1Коринтяни" => "1Corinthians",
+        "Ефесяни" => "Ephesians",
     }
   end
 
@@ -16,6 +20,7 @@ class WebhookController < ApplicationController
       puts "JSON: #{request.body.read}"
       messages = event["entry"][0]["messaging"]
       messages.each do |msg|
+        reply_text = build_verse_text if msg.dig("message", "text") && msg.dig("message", "text") == "Стих за деня!"
         puts "Got new message: #{msg.dig("message", "text")} from sender id: #{msg.dig("sender", "id")}"
         reply = {
             messaging_type: "RESPONSE",
@@ -23,7 +28,7 @@ class WebhookController < ApplicationController
                 id: msg.dig("sender", "id"),
             },
             message: {
-                text: "Слава Богу!",
+                text: reply_text,
             },
         }
         uri = URI ENV["SEND_API_URL"]
@@ -33,7 +38,7 @@ class WebhookController < ApplicationController
         Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
           puts "Replying with message: #{reply.to_json}"
           http.request req
-        end if msg.dig("message", "text")
+        end if msg.dig("message", "text") && msg.dig("message", "text") == "Стих за деня!"
       end
       hist_rec = HistoryRecord.new request_dump: request.body.read
       puts "History record persisted? #{hist_rec.save}"
@@ -52,23 +57,6 @@ class WebhookController < ApplicationController
     else
       render status: :forbidden
     end
-  end
-
-  def test_verse
-    verse = read_verses_from_sheet
-    res = fetch_verse_text verse
-    text = ""
-    if res
-      body = res.body
-      json = @json.decode body.gsub("(", "").gsub(")", "").gsub(";", "")
-      puts json
-      json["book"].each do |book|
-        book["chapter"].each do |k, v|
-          text += "#{k}. #{v["verse"]}\n"
-        end
-      end
-    end
-    render plain: text, status: 200
   end
 
   private
@@ -114,5 +102,22 @@ class WebhookController < ApplicationController
         res.value
       end
     end
+  end
+
+  def build_verse_text
+    verse = read_verses_from_sheet
+    res = fetch_verse_text verse
+    text = ""
+    if res
+      body = res.body
+      json = @json.decode body.gsub("(", "").gsub(")", "").gsub(";", "")
+      puts json
+      json["book"].each do |book|
+        book["chapter"].each do |k, v|
+          text += "#{k}. #{v["verse"]}"
+        end
+      end
+    end
+    text
   end
 end
