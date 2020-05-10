@@ -21,8 +21,8 @@ class WebhookController < ApplicationController
       messages = event["entry"][0]["messaging"]
       messages.each do |msg|
         if msg.dig("message", "text")
-          reply_text = build_verse_text
           puts "Got new message: #{msg.dig("message", "text")} from sender id: #{msg.dig("sender", "id")}"
+          reply_text = build_verse_text
           reply = {
               messaging_type: "RESPONSE",
               recipient: {
@@ -64,6 +64,7 @@ class WebhookController < ApplicationController
   private
 
   def read_verses_from_sheet
+    puts "reading from xlsx file..."
     xlsx = Roo::Excelx.new ENV["VERSES_FILE_PATH"]
     sheet = xlsx.sheet Date.today.year.to_s
     rows = sheet.parse(year: "Година", day: "Ден", verses: "Стихове", version: "Версия", comments: "Допълнително")
@@ -85,6 +86,7 @@ class WebhookController < ApplicationController
   end
 
   def fetch_verse_text(verse)
+    puts "trying to fetch verse: #{verse} text from GetBible API"
     uri = URI ENV["BIBLE_API_URL"]
     uri.query = URI.encode_www_form verse
     fetch uri, 5
@@ -96,6 +98,7 @@ class WebhookController < ApplicationController
       res = http.request req
       case res
       when Net::HTTPSuccess
+        puts "successfully fetched verse text form GetBible API"
         res
       when Net::HTTPRedirection
         location = res["location"]
